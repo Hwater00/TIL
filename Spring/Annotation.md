@@ -12,8 +12,12 @@
   - @RequestMapping(value=" ")형태로 작성
   - 요청 들어온 URI의 요청과 Annotation value 값이 일치하면 해당 클래스나 메소드가 실행
   - 클래스 단위 사용: 하위 메소드에 모두 적용, 메소드 단위 사용: 해당 메소드에서 지정한 방식으로 URL처리
+-  @ResponseBody
+    Body에 전달되는 데이터를 메소드의 인자와 매칭시켜, 데이터를 받아서 처리할 수 있는 어노테이션. <br>클라이언트가 body에 json이나 xml과 같은 형태로 값(객체)를 전송하면 해당 내용을 Java Object로 변환한다.
+-  @PathVariable
+    method parameter 앞에 사용하여, 해당 URL에서 {특정 값}을 변수로 받아 올 수 있다
 - @Autowired
-  Spring Framework에서 Bean 객체를 주입받기 위한 방법= 의존성 주입으로 사용하는 어노테이션.
+  Spring Framework에서 Bean 객체를 주입받기 위한 방법= 의존성 주입으로 사용하는 어노테이션.<br>
   @Autowired 어노테이션이 적용된 생성자, 필드, 메소드에 대해 의존 자동 주입을 처리한다.
   - @Qualifier
     동일한 타입을 가진 bean 객체가 있을 때, 사용할 의존 객체를 선택할 수 있도록 해주는 한정자 값을 설정한다.
