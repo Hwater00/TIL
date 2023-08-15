@@ -5,6 +5,7 @@ JAR과 WAR은 JAVA의 java -jar을 이용해 생성된 압축(아카이브) 파�
 - Class (JAVA리소스, 속성 파일), 라이브러리 파일을 포함함
 - JRE(JAVA Runtime Environment)만 있어도 실행 가능함 (java -jar 프로젝트네임.jar)
 
+
 2. WAR은 Aeb Application Archive의 약자
 - Servlet / Jsp 컨테이너에 배치할 수 있는 웹 애플리케이션(Web Application) 압축파일 포맷
 - 웹 관련 자원을 포함함 (JSP, Servlet, JAR, Class, XML, HTML, Javascript)
