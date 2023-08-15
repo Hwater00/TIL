@@ -13,4 +13,5 @@ JAR과 WAR은 JAVA의 java -jar을 이용해 생성된 압축(아카이브) 파�
 - 별도의 웹서버(WEB) or 웹 컨테이너(WAS) 필요
 - JAR파일의 일종으로 웹 애플리케이션 전체를 패키징 하기 위한 JAR 파일이다.
 
+
 => Sprinag boot에서 가이드하는 표준은 JAR,  JSP를 사용하여 화면 구성/ 외장 WAS를 이용 시 WAR
