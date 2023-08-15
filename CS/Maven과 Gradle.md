@@ -1,14 +1,13 @@
 빌드 관리 도구: 메이븐과 그래들
 소스 코드에서 애플리케이션을 생성하면서 여러가지 외부 라이브러리를 사용하는데, 빌드 관리도구는 사용자가 관리할 필요 없이 필요한 라이브러리들을 자동으로 관리한다.<br>
-<hr>
 
-1.Maven<br>
+<h3>1.Maven<br>
 Maven은 Java 전용 프로젝트 관리 도구로, Lifecycle 관리 목적 빌드 도구<br>
 Maven은 필요한 라이브러리를 pom.xml에 정의한다. 이를 프로젝트 모델링이라고 한다.<br>
 *pom은 Project Object Model의 약자로, 프로젝트 정보(프로젝트 이름, 라이센스, 빌드 설정(소스, 리소스, 라이프 사이클 별 실행한 plugin 등 빌드 관련 설정), 빌드 환경(사용자 환경 별로 달라질 수 있는 프로필 정보, pom 연관 정보(의존 프로젝트, 모듈, 상위 프로젝트 등)을 담고 있다.
 <br>
 
-2.Gradle<br>
+<h3>2.Gradle<br>
  프로젝트 구성 관리 및 범용 빌드 툴이며, Ant Builder와 Groovy script를 기반으로 구축되어 기존 Ant의 역할과 배포 스크립의 기능을 모두 사용가능하며 스프링부트와 안드로이드에서 사용된다.<br>
   Groovy 언어를 사용한 Domain-specific-language를 사용한다.<br>
   *Groovy는 JVM에서 실행되는 스크립트 언어이다. JVM에서 동작하지만 소스코드를 컴파일할 필요 없다.ava와 호환되며, Java class file들을 Groovy class로 사용 가능하다.
