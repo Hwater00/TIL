@@ -1,9 +1,9 @@
 JAR과 WAR은 JAVA의 java -jar을 이용해 생성된 압축(아카이브) 파일로 애플리케이션 배포, 동작 관현 파일을 패키징한 것<br>
 
 <h4>1. JAR</h4> JAVA Archice의 약자
-- JAVA 어플리케이션이 동작할 수 있도록 자바 프로젝트를 압축한 파일
-- Class (JAVA리소스, 속성 파일), 라이브러리 파일을 포함함
-- JRE(JAVA Runtime Environment)만 있어도 실행 가능함 (java -jar 프로젝트네임.jar)
+* JAVA 어플리케이션이 동작할 수 있도록 자바 프로젝트를 압축한 파일
+* Class (JAVA리소스, 속성 파일), 라이브러리 파일을 포함함
+* JRE(JAVA Runtime Environment)만 있어도 실행 가능함 (java -jar 프로젝트네임.jar)
 
 
 <h4>2. WAR</h4> Aeb Application Archive의 약자
