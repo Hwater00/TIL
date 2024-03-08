@@ -1,10 +1,9 @@
-<hr> 
-이벤트 설정
-
-<hr>
+## 이벤트 기초
 문서 객체를 조작할 떼는 DomCountentLoaded 이벤트를 사용
-document.addEventListener('DOMcontentLoaded', () => {
+document.addEventListener('DOMcontentLoaded', () => { // (이벤트 이름, 콜백 함수)
 })
+이 코드는 document라는 문서 객체의 DOMContentLoaded 이벤트가 발생했을 때, 매개변수로 지정한 콜백 함수를 실행해라
+
 
 - CSS 선택자
 태그 선택자 : 태그형태로 특정 태그를 가진 요소를 추출합니다.
@@ -22,5 +21,13 @@ document.querySelectorAll(선택자)
 appendChild() 메소드 등으로 부모 객체와 이미 연결이 완료된 문서 객체인 경우 parentNode 속성으로 부모 객체에 접근할 수 있음
 예시로 문서 객체. parentNode.removeChild(문서 객체)
 
-<hr> 
-이벤트 활용
+<hr>
+
+## 이벤트 활용
+표준 이벤크 모델& 고전 이벤트 모델 & 인라인 이벤트 모델
+
+
+
+
+## 리액트 기초 ##
+
