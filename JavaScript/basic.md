@@ -3,8 +3,8 @@
 
 <hr>
 문서 객체를 조작할 떼는 DomCountentLoaded 이벤트를 사용
-`` document.addEventListener('DOMcontentLoaded', () => {
-}) ``
+''document.addEventListener('DOMcontentLoaded', () => {
+}) ''
 
 - CSS 선택자
 태그 선택자 : 태그형태로 특정 태그를 가진 요소를 추출합니다.
