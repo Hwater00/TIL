@@ -21,7 +21,6 @@ document.querySelectorAll(선택자)
 appendChild() 메소드 등으로 부모 객체와 이미 연결이 완료된 문서 객체인 경우 parentNode 속성으로 부모 객체에 접근할 수 있음
 예시로 문서 객체. parentNode.removeChild(문서 객체)
 
-<hr>
 
 ## 이벤트 활용
 표준 이벤크 모델& 고전 이벤트 모델 & 인라인 이벤트 모델
