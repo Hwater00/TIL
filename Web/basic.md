@@ -3,8 +3,8 @@
 
 <hr>
 문서 객체를 조작할 떼는 DomCountentLoaded 이벤트를 사용
-''document.addEventListener('DOMcontentLoaded', () => {
-}) ''
+document.addEventListener('DOMcontentLoaded', () => {
+})
 
 - CSS 선택자
 태그 선택자 : 태그형태로 특정 태그를 가진 요소를 추출합니다.
@@ -15,8 +15,8 @@
 
 
 head요소와 body 요소 내부에 만든 요소 접근
-`` document.qyerySelector(선택자)
-document.querySelectorAll(선택자) ``
+document.qyerySelector(선택자)
+document.querySelectorAll(선택자) 
 
 문서 객체의 부모는 언제나 하나여야 한다. 
 appendChild() 메소드 등으로 부모 객체와 이미 연결이 완료된 문서 객체인 경우 parentNode 속성으로 부모 객체에 접근할 수 있음
