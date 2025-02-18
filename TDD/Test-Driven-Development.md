@@ -879,4 +879,294 @@ public class GameTest{
 }
 ```
 
+---
+# 부록A JUnit 5
+
+Junit5는 조건에 따라 테스트를 실행할지 여부를 결정하는 기능을 제공한다
+
+이들 애노테이션은 org.junit.jupiter.api.condition 패키지에 속해 있다.
+
+- 자바 버전에 따라 테스트
+
+  @EnabledOnJre 애노테이션을 사용
+
+- 시스템 프로퍼티 값에 따라 테스트
+
+  @EnabledIfSystemProperty 애노테이션
+
+
+### 태깅과 필터링
+
+```java
+test{
+	useJUintPlatform{
+		include Tags 'integration'
+		exclude Tags 'slow| very-slow'
+	}
+}
+```
+
+@Tag 애노테이션은 테스트에 태그를 달 때 사용한다. 클래스와 테스트 메서드에 적용할 수 있다
+
+- 태그 이름 규칙
+    - null이나 공백이면 안 된다
+    - 좌우 공백을 제거한 뒤에 공백을 포함하면 안 된다
+    - ISO 제어 문자를 포함하면 안 된다
+    - , (),& |! 포함하면 안 된다
+
+### @Nested 애노테이션 중첩 구성
+
+@Nested 애노테이션을 사용하면 중첩 클래스에 테스트 메서드를 추가 할 수 있다
+
+중첩된 클래스는 내부 클래스이므로 외부 클래스의 멤버에 접근할 수 있다.
+
+```java
+import org.junit.jupitrt.api.Nested;
+
+public class Outer{
+	@BeforeEach void outerBefore(){}
+	@Test void outer(){}
+	@AfterEach void outerAfter() {}
+	
+	@Nested
+	class NestedA{
+		@BeforeEach void nestedBefore(){}
+		@Test void nested(){}
+		@AfterEach void nestedAfter() {}
+	}
+}
+
+//실행 순서
+1. Outer 객체 생성
+2. NestedA 객체 생성
+3. outerBefore() 메서드 실행
+4. nestedBefore() 메서드 실행
+5. nested1() 테스트 실행
+6. nextedAfter() 메서드 실행
+7. outerAfter() 메서드 실행
+```
+
+### @TempDir 애노테이션을 이용한 임시 폴더 생성
+
+Junit 5.4 버전에 추가된 @TempDir 애노테이션을 필드 또는 라이프사이클 관련 메서드나 테스트 메서드의 파라미터로 사용하면 Junit은 임시 폴더를 생성하고 @TempDir 애노테이션을 붙인 필드나 파라미터에 임시 폴더 경로를 전달한다
+
+File이나 Path 타입에 적용할 수 있다.
+
+```java
+import org.junit.jupiter.api.Test;
+import org.junit.jupitrt.api.TempDir;
+import java.io.File;
+
+public class TempDirTest{
+	@TempDir
+	File tempFolder;
+	
+	@Test
+	void fileTest(){
+		//1.  tempFolder에 파일 생성 등 작업
+	}
+	
+	//2. 특정 메서드에서만 임시 폴터 생성해서 사용
+	@Test
+	void fileRest(@TempDir Path TmpFolder){
+	// 테스트 코드
+	}
+}
+
+//3. 특정 클래스 단위로 임시 폴더 생성해서 사용
+정적 필드  또는 @BeforeAll 메서드의 파라미터에 애노테이션 붙이기
+@TempDir
+static void tempFolderPerClass;
+@BeforeAll
+static void setUp(@TempDir File tempFolder
+```
+
+### @Timeout 애노테이션을 이용한 테스트 실행 시간 검증
+
+Junit 5.5 버전부터 지원하는 애노테이션으로 테스트가 일정 시간 내에 실행되는지 검증할 수 있다.
+
+```java
+// 1초 이내에 테스트 메서드가 실행되는지 검증 코드
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+
+public class TimeoutTest{
+	@Test
+	@Timeout(1) // 초 단위 검증
+	void sleep2seconds() throws InteruptedException{
+		Thread.sleep(2000);
+	}
+	
+	
+	@Test
+	@Timeout(value = 500, unit = TimeUnit.MILISECONDS) // 초 제외 단위 검증- unit속성 TimeUnit 값 지정
+	void sleep40Mills throws InteruptedException{
+		Thread.sleep(40);
+	}
+}
+```
+---
+# 부록 B Junit 4 기초
+## Junit4와 5 차이점
+
+- 애노테이션 차이
+    - JUnit4 @Before → JUnit5 @BeforeEach
+    - JUnit4 @After → JUnit5 @AfterEach
+- org.junit.Assert 클래스 차이
+    - JUnit4는 assertAll()과 assertThrows()를 제공하지 않는다
+- 익셉션 객체 추가 검증 차이
+    - expected 속성을 사용한다
+    - 단, 발생한 익셉션 객체를 사용하여 추가적 검증시에는 사용할 수 없음으로 try-catch로 직접 검증 처리
+
+---
+# 부록 D AssertJ 소개
+
+- 의존 설정
+
+```java
+testCompile("org.asssertj:assertj-core:3.11.1");
+```
+
+AssertJ 사용 장점
+
+- 개발 도구의 자동 완성 기능 활용
+- 타입별로 다양한 검증 메서드를 제공
+- 테스트 실패한 이유를 포함한 오류 메시지
+
+```java
+assertTrue(id.contains("a:); -> asserThat(id).contains("a");
+```
+
+## AssertJ 기본 사용법
+
+
+assertThat(실제값).검증메서드(기대값)
+
+assertThat() 메서드는 org.assertj.core.api.Assertions 클래스에 정적 메서드로 정의되어 있다. 주요 타입별로 assertThat() 메서드가 존재하며 타입에 따라 다른 검증 메서드를 제공한다
+
+### 기본 검증 메서드
+
+|  | isEqualTo(값) | 값과 같은지 검증한다 |
+| --- | --- | --- |
+|  | isNotEqualTo(값) | 값과 같지 않은지 검증한다 |
+|  | isNull() | null인지 검증한다 |
+|  | isNotNull() | null 아닌지 검증한다 |
+| 가변 인자로 주거나 List 타입(정확하게는 Iterable을 구현하는 타입)을 이용해서 전달 | isIn(값 목록) | 값 목록에 포함되어 있는지 검증한다
+|
+| 가변 인자로 주거나 List 타입(정확하게는 Iterable을 구현하는 타입)을 이용해서 전달 | isNotIn(값 목록) | 값 목록에 포함되어 있지 않은지 검증한다
+|
+| Comparable 인터페이스를 구현한 타입이나 int, double과 같은 숫자 타입의 검증 | isLessThan(값) | 값보다 작은지 검증한다 |
+|  | isLessThanOrEqual(값) | 값보다 작거나 같은지 검증 |
+|  | isGreaterThan(값) | 값보다 큰지 검증 |
+|  | isGreaterThanOrEqualTo( 값) | 값보다 크거나 같은지 검증 |
+|  | isBetween(값1, 값2) | 값1, 값2 사이에 포함되어 있는지 검증 |
+| Boolean, boolean 타입의 검증 | isTrue() | 값이 true인지 검증한다 |
+|  | isFalse() | 값이 false인지 검증한다 |
+
+### String에 대한 추가 검증 메서드
+
+| 특정  값을 포함 | contains(CharSequence… values) | 인자로 지정한 문자열들을 모두 포함하고 있는지 검증 |
+| --- | --- | --- |
+|  | containsOnlyOnce(CharSequence charSequence) | 해당 문자열을 딱 한 번만 포함하는지 검증 |
+|  | containsOnlyDigits( ) | 숫자만 포함하는지 검증 |
+|  | containsWhitespaces( ) | 공백 문자를 포함하고 있는지 검증 |
+|  | containsOnlyWhitespaces( ) | 공백 문자만 포함하는지 검증 |
+|  | containsPattern(CharSequence regex)
+containsPattern(Pattern pattern) | 지정한 정규 표현식에 일치하는 문자를 포함하는지 검증 |
+| 특정 값을 포함하지 
+않는 여부 | doesNotContain(CharSequence… values) | 인자로 지정한 문자열들을 모두 포함하고 있지 않은지 검증 |
+|  | doesNotContainAnyWhitespaces( ) | 공백 문자를 포함하고 있지 않은지 검증 |
+|  | doesNotContainOnlyWhitespaces( ) | 공백 문자만 포함하고 있지 않은지 검증 |
+|  | doestNotContainPattern(CharSequence regex)
+doestNotContainPattern(Pattern pattern) | 정규 표현식에 일치하는 문자를 포함하고 있지 않은지 검증 |
+| 특정 문자열로 시작하거나 끝나는지 | startsWith(CharSequence prefix) | 지정한 문자열로 시작하는지 검증 |
+|  | doestNotstartWith(CharSequence prefix) | 지정한 문자열로 시작하지 않는지 검증 |
+|  | endsWith(CharSequence suffix) | 지정한 문자열로 끝나는지 검증 |
+|  | doestNotendWith(CharSequence suffix) | 지정한 문자열로 끝나지 않는지 검증 |
+|  |  |  |
+
+### 숫자에 대한 추가 검증 메서드
+
+| isZero( )
+isNotZero( ) | 0인지 검증
+0이 아닌지 검증 |
+| --- | --- |
+| isOne( ) | 1인지 검증 |
+| isPositive( )
+isNotPositive( ) | 양수인지 검증
+양수가 아닌지 검증 |
+| isNegative( )
+isNotNegative( ) | 음수인지 검증
+음수가 아닌지 검증 |
+
+### 날짜/시간에 대한 검증 메서드
+
+| LocalDateTime, LocalDate, Date 등 날짜와 시간 관련된 타입 | isBefore(비교할 값) | 비교할 값보다 이전인지 검증 |
+| --- | --- | --- |
+|  | isBeforeOrEqualTo(비교할 값) | 비교할 값보다 이전이거나 같은지 검증 |
+|  | isAfter(비교할 값) | 비교할 값보다 이후인지 검증 |
+|  | isAfterOrEqualTo(비교할 값) | 비교할 값보다 이후이거나 같은지 검증 |
+| LocalDateTime, OffsetDateTime, ZonedDateTime 타입 | isEqualToIgnoringNanos(비교할 값) | 나노 시간을 제외한 나머지 값이 같은지 검증 ⇒ 초 단위까지 값이 같은지 검증 |
+|  | isEqualToIgnoringSeconds(비교할 값) | 초 이하 시간을 제외한 나머지 값이 같은지 검증⇒ 분 단위까지 값이 같은지 검증 |
+|  | isEqualToIgnoringMinutes(비교할 값) | 분 이하 시간을 제외한 나머지 값이 같은지 검증⇒ 시 단위까지 값이 같은지 검증 |
+|  | isEqualToIgnoringHours(비교할 값) | 시 이하 시간을 제외한 나머지 값이 같은지 검증⇒ 일 단위까지 값이 같은지 검증 |
+
+### 콜렉션에 대한 검증 메서드
+
+| List/Set | hasSize(int expected) | 컬렉션의 크기가 지정한 값과 같은지 검증 |
+| --- | --- | --- |
+|  | contains(E … values) | 컬렉션이 지정한 값을 포함하는지 검증 |
+|  | containsOnly(E … values) | 컬렉션이 지정한 값만 포함하는지 검증 |
+|  | containsAnyOf(E … values) | 컬렉션이 지정한 값 중 일부를 포함하는지 검증 |
+|  | containsOnlyOnce(E … values) | 컬렉션이 지정한 값을 한 번만 포함하는지 검증 |
+| Map | containsKey(K key) | Map이 지정한 키를 포함하는지 검증 |
+|  | containsKeys(K… keys)containsOnlyKeys(K… keys)doesNotContainKeys(K… keys) | Map이 지정한 키들을 포함하는지 검증Map이 지정한 키만 포함하는지 검증Map이 지정한 키들을 포함하지 않는지 검증 |
+|  | containsValues(VALUE… values) | Map이 지정한 값들을 포함하는지 검증 |
+|  | contains(Entry<K,V>… values) | Map이 지정한 Entry<K,V>를 포함하는지 검증 |
+
+### 익셉션 관련 검증 메서드
+
+- assertThatThrownBy() 메서드 인자로 받은 람다에서 익셉션이 발생하는지 검증한다
+    - 발생한 익셉션의 타입을 추가로 검증하고 싶다면 isInstanceOf() 메서드
+- assertThatExceptionOfType() 발생할 익셉션의 타입을 저장
+    - isThrownBy() 메서드를 이용해서 익셉션이 발생할 코드 블록을 지정
+- assertThatIoException() 메서드는 IOException이 발생하는 것을 검증
+    - 유사) assertThatNullPointerException(), assertThatllegalArgumentException(), assertThatIllegalStateException()
+- 익셉션이 발생하지 않는 것 검증
+
+```java
+assertThatCode(()->{
+
+}).doesNotThrowAnyException
+```
+
+### as()와 describedAs()로 설명 달기
+
+as() 메서드 대신에 describedAs() 메서드를 사용해도 됨
+
+- as 메서드로 지정한 설명 문구
+
+```java
+assertThat(id).as("ID 검사").isEqualTo("abc");
+```
+
+- as 메서드에 문자열 포맷 사용
+
+```java
+// 첫번째 인자는 포맷팅을 포함한 문자열, 두번쨰 인자부터는 포맷팅에 사용할 값
+asserThat(id).as("ID 검사: %s", "abc").isEqualTo("abc");
+```
+
+- 한 테스트 내 다수의 검증 메서드
+
+```java
+List<Integer> ret = gerResults();
+
+List<Integer> expected = Arrays.asList(1,2,3);
+SoftAssertions soft = new SoftAssertions();
+for(int i=0; i<expected.size(); i++){
+	soft.assertThat(req.get(i).as("ret[%d]",i).isEqualsTo(expected.get(i));
+}
+soft.assertAll;
+```
 
