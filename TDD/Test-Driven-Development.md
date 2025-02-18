@@ -518,3 +518,365 @@ tearDown
 - 테스트에서 WireMockServer의 동작을 기술한다.
 - HTTP 연동을 수행하는 테스트를 실행한다.
 - 테스트 실행 후, WireMockServer를 중지한다.
+
+---
+# ch10 테스트 코드와 유지보수
+
+- 테스트 코드도 그 자체로 코드이기 때문에, 제품 코드와 동일하게 유지보수 대상이 된다.
+- 테스트 코드 자체의 유지보수성이 좋아야 한다.
+
+### ⚠️ 테스트 코드를 만들 때 주의해야 할 사항 ⚠️
+
+1. **단언의 기댓값은 변수나 필드를 사용하여 표현하지 말고 실제 값 사용하기**
+  - 단언할 때 사용한 값이 무엇인지 알기 위해 코드를 왔다갔다 할 필요가 없어진다.
+
+    ```java
+    // 안 좋은 예
+    @Test
+    void dateFormat() {
+        LocalDate date = LocalDate.of(1945, 8, 15);
+        String dateStr = formatDate(date);
+        assertEquals(date.getYear() + "년 " + date.getMonthValue() + "월 " + date.getDayOfMonth() + "일", dateStr);
+    }
+    
+    // 좋은 예
+    @Test
+    void dateFormat() {
+        LocalDate date = LocalDate.of(1945, 8, 15);
+        String dateStr = formatDate(date);
+        assertEquals("1945년 8월 15일", dateStr);
+    }
+    ```
+
+2. **두 개 이상을 검증하지 않기**
+  - 한 테스트에서 검증하는 내용이 2개 이상이면, 테스트 결과를 확인할 때 집중도가 떨어진다.
+  - 한 테스트 메소드에서 서로 다른 내용을 검증한다면, 각 검증 대상을 별도로 분리할 것.
+  - 테스트 메소드가 반드시 한 가지만 검증해야 하는 것은 아니지만, 검증 대상이 명확하게 구분된다면 테스트 메소드도 구분하는 것이 유지보수에 유리하다.
+
+3. **모의 객체는 가능한 범용적인 값을 사용**
+  - 테스트 의도를 해치지 않는 범위에서, ‘pw’와 같은 특정한 값보다는, **`Mockito.anyString()`** 과 같은 범용적인 것을 사용해야 한다.
+    - 테스트 코드를 수정할 때, 모의 객체 관련 코드도 함께 수정해야 하는 빈도도 줄어든다.
+
+      ```java
+      @DisplayName("약한 암호이면 회원가입 실패")
+      @Test
+      void weakPassword() {
+          // 모의 객체를 이용하여 Stub을 대신
+          BDDMockito
+              .given(mockPasswordChecker.checkPasswordWeak(Mockito.anyString()))
+              .willReturn(true);
+
+          assertThrows(WeakPasswordException.class, () -> {
+              userRegister.register("id", "pw", "email");
+          });
+      }
+      ```
+
+      - @Sql 애노테이션을 사용해서 테스트실행 전에 특정 쿼리를실행 → 모든 케스트가 같은 값을 사용하는 데이터
+        #### SQL 저장 파일 내용 (`init-data.sql`)
+
+        ```
+        -- SQL 파일 내용
+                truncate table user;
+                insert into user values('cbk','pw','cbk@cbk.com');
+                insert into user values('tddiht','pw1','tdhot@ilovetdd.com');
+        ```
+        ### Spring Boot 테스트 클래스
+        ```
+        @SpringBootTest
+        @Sql("classpath:init-data.sql")
+        public class UserRegisterIntTestUsingSql {
+        @Autowired
+        private UserRegister register;
+        @Autowired
+        private JdbcTemplate jdbcTemplate;
+      
+        @Test
+        void 동일한ID가_이미_존재하면_익셉션() {
+         // 실행 결과 확인
+         assertThrows(DupIdException.class,
+         () -> register.register("cbk", "strongpw", "email@email.com")
+         );
+        }
+      
+        @Test
+        void 존재하지_않으면_저장함() {
+          // 실행
+         register.register("cbk2", "strongpw", "email@email.com");
+          } 
+        }
+        ```
+4. **내부 구현보다 실행 결과을 검증**
+  - 테스트 대상의 내부 구현을 검증하는 것이 나쁜 것은 아니지만, 구현을 조금만 변경해도 테스트가 깨질 가능성이 커진다.
+  - 테스트 코드는 내부 구현보다 실행 결과를 검증해야 한다. (내부 구현은 언제든지 변경될 수 있으니까)
+
+5. **셋업을 이용하여 여러 메소드에 동일한 상황 적용하지 않기**
+  - 코드 중복을 제거하기 위해 `@BeforeEach`를 사용하여 상황을 구성할 수 있다.
+  - 각 테스트 메소드를 위한 상황을 셋업 메소드에서 모두 따로 설정하는 건 NO.
+  - 테스트 메소드는 자체적으로 검증하는 내용을 완전히 기술하고 있어야, 테스트 코드를 유지보수하는 노력을 줄일 수 있다.
+
+   예시:
+  ```java
+public class UserGivenHelper {
+    private JdbcTemplate jdbcTemplate;
+
+    public UserGivenHelper(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
+    public void givenUser(String id, String pw, String email) {
+        jdbcTemplate.update(
+            "insert into user values (?, ?, ?) " +
+            "on duplicate key update password = ?, email = ?",
+            id, pw, email, pw, email);
+    }
+}
+
+@Autowired
+JdbcTemplate jdbcTemplate;
+private UserGivenHelper given;
+
+@BeforeEach
+void setUp() {
+    given = new UserGivenHelper(jdbcTemplate);
+}
+
+@Test
+void dupId() {
+    given.givenUser("lee", "pw", "lee@email.com");
+
+    assertThrows(DupIdException.class, () -> register.register("lee", "pw", "lee@email.com"));
+}
+```
+
+6. **실행 환경이 다르다고 실패하지 않기**
+  - 같은 테스트 메소드가 실행 환경에 따라 성공하거나 실패하면 안 된다. (ex: 파일 경로)
+    - 파일 경로의 경우, 프로젝트 폴더를 기준으로 상대 경로로 설정할 것.
+
+7. **실행 시점이 다르다고 실패하지 않기**
+  - 테스트 코드에서 시간을 명시적으로 제어하는 것이 좋다.
+
+      ```
+    // 안 좋은 예
+    public class Member {
+        private LocalDateTime expiryDate;
+
+        public boolean isExpired() {
+            return expiryDate.isBefore(LocalDateTime.now());
+        }
+    }
+
+    @Test
+    void notExpired() {
+        LocalDateTime expiry = LocalDateTime.of(2019, 12, 31, 0, 0, 0);
+        Member member = Member.builder().expiryDate(expiry).build();
+        assertFalse(member.isExpired());
+    }
+    ```
+
+   
+``` //좋은 예 1: 시간을 파라미터로 전달 받아 비교하기
+public class BizClock {
+    private static BizClock DEFAULT = new BizClock();
+    private static BizClock instance = DEFAULT;
+
+    public static void reset() {
+        instance = DEFAULT;
+    }
+
+    public static LocalDateTime now() {
+        return instance.timeNow();
+    }
+
+    protected void setInstance(BizClock bizClock) {
+        BizClock.instance = bizClock;
+    }
+
+    public LocalDateTime timeNow() {
+        return LocalDateTime.now();
+    }
+}
+
+class TestBizClock extends BizClock {
+    private LocalDateTime now;
+
+    public TestBizClock() {
+        setInstance(this);
+    }
+
+    public void setNow(LocalDateTime now) {
+        this.now = now;
+    }
+
+    @Override
+    public LocalDateTime timeNow() {
+        return now != null ? now : super.now();
+    }
+}
+```
+   
+
+8. **필요하지 않은 값은 설정하지 않기**
+  - 중복 아이디를 가진 회원은 가입할 수 없다는 것을 검증하기 위해 테스트 코드를 짤 때, id가 아닌 email, password 등 필요하지 않은 값은 설정할 필요 없다.
+
+9. **조건부로 검증하지 않기**
+  - 조건에 따라서 단언을 하도록 하지 말 것 (테스트는 성공하거나 실패해야 한다! 아무 일도 일어나지 않으면 안돼…)
+
+10. **통합 테스트는 필요하지 않은 범위까지 연동하지 않기 (`@JdbcTest`)**
+  - `@SpringBootTest` 어노테이션을 사용하면 서비스, 컨트롤러 등 모든 스프링 빈을 초기화 함.
+  - `@JdbcTest` 어노테이션을 사용하면 DataSource, JdbcTemplate 등 DB 연동과 관련된 설정만 초기화하고 다른 빈은 생성하지 않으므로 스프링 초기화 시간을 줄일 수 있다.
+    ```java
+    @JdbcTest
+    @AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replalce.NONE)
+    public class MemberDaoJdbcTest{
+    @Autowired
+    jdbcTemplate jdbcTemplate;
+    
+        private MemberDao doa;
+        
+        @BeforeEach
+        void setUp(){
+            dao = new MemberDao(jdbcTemplate);
+        }
+        
+        @Test
+        void findAll(){
+        }
+    
+    }
+    ```
+
+11. **더 이상 쓸모 없는 테스트 코드는 삭제하기**
+  - 단체 테스트 커버리지를 높이기 위한 목적으로 작성한 테스트 코드는 유지할 필요 없다.
+---
+
+# ch11 마치며
+
+### TDD의 필요성
+
+- 일정 압박으로 인해 본인이 만든 테스트 코드를 충분히 테스트하지 않고 다음 기능을 구현하게 되면, 버그를 포함할 가능성이 커진다.
+- 테스트 코드를 작성하는 것이 개발 시간을 늘리는 것처럼 보이지만, 오히려 뒤로 갈수록 반복되는 테스트 시간을 줄여 전체 개발 시간(코딩 시간, 테스트 시간, 디버깅 시간)이 줄어든다.
+
+### TDD를 적용할 때의 장점
+
+- 테스트를 먼저 작성해야 한다면, 적어도 해당 테스트를 통과한 만큼은 코드를 올바르게 구현했다는 사실을 알 수 있다.
+- 회귀 테스트로 사용할 수 있다.
+- 버그가 발생할 가능성이 줄어든다.
+- 버그 수정이 더 쉬워진다.
+
+> **레거시 코드**처럼 TDD를 하기 힘든 코드는 테스트 코드라도 만들어봐라!
+- 테스트 코드를 만들기 힘들다면, 약간의 위험을 감수하더라도 일부 코드를 리팩토링하여 테스트 코드를 만들 수 있는 구조로 변경해야 한다.
+
+---
+# 부록 C Mockito  기초 사용법
+
+### 의존 설정
+
+```java
+dependencis{
+	testImplementation('org-mockito:mockito-core:2.26.0')
+}
+```
+
+### 모의 객체 생성
+
+Mockito.mock() 메서드를 이용하면 특정 타입의 모의 객체를 생성할 수 있다
+
+```java
+import static org.mockito.Mockito.mock;
+
+public class GameGenMockTest{
+	@Test
+	void mockTest(){
+		GameNumGen genMock = mock(GameNumGen.class);
+	}
+}
+```
+
+### 스텁 설정
+
+```java
+import static org.juint.jupiter.api.Assertions.assertEquals;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
+public class GameGenMockTest{
+	@Test
+	void mockTest(){
+		GameNumGen genMock = mock(GameNumGen.class);
+		**given(genMock.generate(GameLevel.EASY)).willReturn("123");**
+		**given(fenMock.generate(null)).weillThrow(ILLefalArgumentException.class);**
+		
+		String num = genMock.generate(GameLEvel.EASY);
+		assertEquals("123", num);
+	}
+}
+```
+
+### 인자 매칭 처리
+
+org.mockito.ArgumentMatchers 클래스를 사용하여 임의의 값에 일피하도록 설정할 수 있다.
+
+- ArgumentMatchers 클래스
+
+    | anyInt(), anyShort(), anyLong(), anuByte(), anyChar(), anuDouble(), anyFloat, anyBoolen()  | 기본 데이터 타입에 대한 임의 값 일치 |
+    | --- | --- |
+    | anyString() | 문자열에 대한 임의 값 일치 |
+    | any() | 임의 타입에 대한 일치 |
+    | anyList() , anySet() , anyMap(), anyColletion() | 임의 콜렉션에 대한 일치 |
+    | matches(String) , matches(Pattern) | 정규표현식을 이용한 String 값 일치 여부 |
+    | eq(값) |  특정 값과 일치 |
+
+Mockito는 한 인자라도 ArgumentMatcher를 사용해서 설정한 경우 모든 인자를ArgumentMatcher를 이용해 설정하도록 한다. 임의의 값과 일치하는 인자를 함께 사용하고 싶다면 ArgumentMatcher.eq()메서드 사용
+
+```java
+import static org.junit.jupiter.api.Assertiona.assertEquals;
+import static org.mockito.ArgumentMatcher.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
+public class AnyMatchTest{
+	@Test
+	void anyMatchTest(){
+		GameNumGen genMock= mock(GameNymGen.class);
+		**given(genMock.generate(any()))).willReturn("456");**
+		
+		String num = genMock.genrate(GameLevel.EASY);
+		assertEquals("456", num);
+		
+		String num2 = genMock.generate(GameLEvel.NORMAL);
+		assertEquals("456", num2);
+	}
+}
+```
+
+### 메서드 호출 검증
+
+- 호출 횟수 검증 메서드
+
+    | only() | 한 번만 호출 |
+    | --- | --- |
+    | times(int) | 지정한 횟수만큼 호출 |
+    | never() | 호출하지 않음 |
+    | atLeast(int) | 적어도 지정한 횟수만큼 호출 |
+    | atLeastOnce() | atLeast(1)과 동일 |
+    | atMost(int) | 최대 지정한 횟수만큼 호출  |
+
+```java
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.mock;
+
+public class GameTest{
+	@Test
+	void init(){
+		GameNumGen genMock = mock(GameNumGen.class);
+		Game game = new Game(genMock);
+		game.init(GameLEvel.EASY)l
+		
+		**then(genMock).should(only()).genrate(GameLevel.EASY);**
+
+	}
+}
+```
+
+
