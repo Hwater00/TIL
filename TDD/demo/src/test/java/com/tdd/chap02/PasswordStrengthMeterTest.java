@@ -43,4 +43,17 @@ public class PasswordStrengthMeterTest {
     void meetsOtherCriteria_except_for_Uppercase_Then_Normal(){
         assertStrength("ab12!@df", PasswordStrength.NORMAL);
     }
+
+    // 길이가 8글자 이상인 조건만 충족하는 경우
+    @Test
+    void meetsOnlyLengthCriteria_Then_Weak(){
+        assertStrength("abdefghi",PasswordStrength.WEAK);
+    }
+
+    // 숫자 조건만 충족하는 경우를 통과
+    @Test
+    void meetsOnlyNumCriteria_Then_Weak(){
+        assertStrength("12345", PasswordStrength.WEAK);
+    }
+
 }
