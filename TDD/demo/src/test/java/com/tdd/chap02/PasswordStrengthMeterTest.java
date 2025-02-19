@@ -12,7 +12,7 @@ public class PasswordStrengthMeterTest {
     // 첫 번쨰 테스트: 모든 규칙을 충족하는 경우
     void meetsAllCriteria_Then_Strong(){
         assertStrength("ab12!@AB",PasswordStrength.STRONG);
-        assertStrength("abc1Add",PasswordStrength.STRONG);
+        assertStrength("abc1!Add",PasswordStrength.STRONG);
     }
 
     @Test
@@ -26,5 +26,15 @@ public class PasswordStrengthMeterTest {
     void meetsOtherCriteria_except_for_number_Then_Normal(){
         PasswordStrength result = meter.meter("ab!@ABqwer");
         assertEquals(PasswordStrength.NORMAL,result);
+    }
+
+    @Test
+    void nullInput_Then_Invalid(){
+        assertStrength(null,PasswordStrength.INVALID);
+    }
+
+    @Test
+    void emptyInput_Then_Invalid(){
+        assertStrength("", PasswordStrength.INVALID);
     }
 }
