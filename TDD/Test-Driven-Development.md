@@ -401,6 +401,18 @@ tearDown
 | 스파이 (Spy) | - 호출된 내역 기록, 기록한 내용은 테스트 결과 검증 시 사용 |
 | 모의 (Mock) | - 기대한 대로 상호작용 하는지 행위 검증<br>- 기대한 대로 동작하지 않으면 Exception 발생 |
 
+### 대역은 개발 속도를 올리는데 도움을 준다.
+
+- 1️⃣ 대역을 사용하면 의존하는 대상을 실제로 구현하지 않아도, 다양한 상황에 대해 테스트를 진행하고 실행 결과를 확인할 수 있다.
+    - 카드 정보를 제공하는 외부 API 연동 없이도 유효한 카드번호, 도난 카드번호에 대한 테스트 가능
+    - DB가 없어도 동일 ID가 이미 존재하는 상황에 대해 테스트 가능
+    - DB가 없어도 회원 데이터가 올바르게 저장되는지 확인 가능
+    - 메일 서버가 없어도 이메일 발송 요청 확인 가능
+- 2️⃣ 대역을 사용하다면 실제 구현을 사용할 때보다 대기시간이 줄어든다.
+    - 업체로부터 테스트용 카드 번호를 제공 받을 때까지 기다릴 필요가 없다.
+    - 회원가입 후 이메일이 도착할 때까지 기다릴 필요가 없다.
+    - 암호 검사 기능의 개발이 완료될 때까지 회원가입 테스트를 미룰 필요가 없다.
+
 ### 대역 사용 실습 : 회원가입 기능
 
 - UserRegister : 회원가입에 대한 핵심 로직 수행
@@ -416,6 +428,49 @@ tearDown
 - 이메일 발송 여부 확인 ⇒ Spy
   - 가입 성공 시, 이메일로 가입 안내 메일 발송
 
+    - 예시 (가입한 ID가 없으면 회원가입 성공)
+        - 모의 객체 사용 시: repository의 save( ) 메소드를 호출해야 하고, 이때 전달한 객체의 값이 어때야 한다~
+        - 가짜 구현 사용 시: repository에 저장된 객체의 값이 어때야 한다~
+          - ex) 모의 객체 이용
+
+              ```java
+              public class UserRegisterMockOvercaseTest {
+                  private UserRegister userRegister;
+                  private WeakPasswordChecker mockPasswordChecker = Mockito.mock(WeakPasswordChecker.class);
+                  private UserRepository mockRepository = Mockito.mock(UserRepository.class);
+                  private EmailNotifier mockEmailNotifier = Mockito.mock(EmailNotifier.class);
+        
+                  @BeforeEach
+                  void setUp(){
+                      userRegister = new UserRegister(mockPasswordChecker, mockRepository, mockEmailNotifier);
+                  }
+            
+                  @Test
+                  void noDupid_RegisterSuccess(){
+                      userRegister.register("id", "pw", "email");
+        
+                      ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
+                      BDDMockito.then(mockRepository).should().save(captor.capture());
+                
+                      User savedUser = captor.getValue();
+                      assertEquals("id", savedUser.getId());
+                      assertEquals("email", savedUser.getEmail());
+                  }
+              }
+              ```
+          - ex) 메모리를 이용한 가짜 구현
+              ```java
+                  @Test
+                    void noDupId_RegisterSuccess(){
+                    userRegister.register("id", "pw", "email");
+        
+                      User savedUser = fakeRepository.findById("id"); //가짜 대역 사용
+        
+                      assertEquals("id", savedUser.getId());
+                      assertEquals("email", savedUser.getEmail());
+                }
+              ```
+      
 ### 모의 객체로 스텁과 스파이 대체 (Mockito)
 
 - 모의 객체를 위한 도구 중 **Mockito**를 사용
@@ -501,23 +556,21 @@ tearDown
 
 - **Mock Server, WireMock, WireMockServer**
 
-  **Mock Server**
+  - **Mock Server**
+    - 테스트를 위해 실제 서버처럼 동작하는 가짜 서버
 
-  - 테스트를 위해 실제 서버처럼 동작하는 가짜 서버
-
-  **WireMock**
-
-  - Java에서 Mock Server를 쉽게 만들 수 있도록 도와줌
-  - 의존성 추가
-      ```
-      org.wiremock:wiremock-standalone:3.3.1
-      ```
-
-- WireMockServer는 HTTP 서버를 흉내낸다.
-- 테스트 실행 전, WireMockServer를 시작한다. 실제 HTTP 서버가 뜬다.
-- 테스트에서 WireMockServer의 동작을 기술한다.
-- HTTP 연동을 수행하는 테스트를 실행한다.
-- 테스트 실행 후, WireMockServer를 중지한다.
+  - **WireMock**
+    - Java에서 Mock Server를 쉽게 만들 수 있도록 도와줌
+    - 의존성 추가
+        ```
+        org.wiremock:wiremock-standalone:3.3.1
+        ```
+  - **WireMockServer**
+    - WireMockServer는 HTTP 서버를 흉내낸다.
+    - 테스트 실행 전, WireMockServer를 시작한다. 실제 HTTP 서버가 뜬다.
+    - 테스트에서 WireMockServer의 동작을 기술한다.
+    - HTTP 연동을 수행하는 테스트를 실행한다.
+    - 테스트 실행 후, WireMockServer를 중지한다.
 
 ---
 # ch10 테스트 코드와 유지보수
