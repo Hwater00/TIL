@@ -1087,17 +1087,16 @@ doestNotContainPattern(Pattern pattern) | 정규 표현식에 일치하는 문�
 
 ### 숫자에 대한 추가 검증 메서드
 
-| isZero( )
-isNotZero( ) | 0인지 검증
-0이 아닌지 검증 |
+| 메서드 | 설명 |
 | --- | --- |
-| isOne( ) | 1인지 검증 |
-| isPositive( )
-isNotPositive( ) | 양수인지 검증
-양수가 아닌지 검증 |
-| isNegative( )
-isNotNegative( ) | 음수인지 검증
-음수가 아닌지 검증 |
+| isZero() | 0인지 검증 |
+| isNotZero() | 0이 아닌지 검증 |
+| isOne() | 1인지 검증 |
+| isPositive() | 양수인지 검증 |
+| isNotPositive() | 양수가 아닌지 검증 |
+| isNegative() | 음수인지 검증 |
+| isNotNegative() | 음수가 아닌지 검증 |
+
 
 ### 날짜/시간에 대한 검증 메서드
 
