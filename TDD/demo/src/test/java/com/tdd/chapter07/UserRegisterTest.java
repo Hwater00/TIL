@@ -4,20 +4,20 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class UserRegisterTest{
     private UserRegister userRegister;
-    private StubWeakPasswordChecker stubPasswordChecker =
-            new StubWeakPasswordChecker();
 
+    private StubWeakPasswordChecker stubPasswordChecker = new StubWeakPasswordChecker();
     private MemoryUserRepository fakeRepository = new MemoryUserRepository();
+    private SpyEmailNotifier spyEmailNotifier = new SpyEmailNotifier();
+
 
     @BeforeEach
     void setUp(){
         userRegister = new UserRegister(stubPasswordChecker,
-                fakeRepository);
+                fakeRepository, spyEmailNotifier);
     }
 
 
@@ -47,9 +47,18 @@ public class UserRegisterTest{
     void noDupId_RegisterSuccess(){
         userRegister.register("id","pw","email");
 
-        User savedUser = fakeRepository.findBuId("id");
+        User savedUser = fakeRepository.findById("id");
         assertEquals("id",savedUser.getId());
         assertEquals("email",savedUser.getEmail());
+    }
+
+    @DisplayName("가입하면 메일을 전송함")
+    @Test
+    void whenRegisterThenSendMail(){
+        userRegister.register("id","pw","email@email.com");
+
+        assertTrue(spyEmailNotifier.isCalled());
+        assertEquals("email@email.com",spyEmailNotifier.getEmail());
     }
 
 }

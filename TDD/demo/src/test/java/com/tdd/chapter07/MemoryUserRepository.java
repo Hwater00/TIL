@@ -11,7 +11,7 @@ public class MemoryUserRepository implements UserRepository{
     }
 
     @Override
-    public User findBuId(String id) {
+    public User findById(String id) {
         return users.get(id);
     }
 }
